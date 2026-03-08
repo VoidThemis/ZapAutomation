@@ -11,26 +11,27 @@ services:
 
 
 # TODO = revisar una manera de pasar los valores clave como 'SECRETS' [secrets-docker]
+##  postgres:
+  #    image: postgres
+  #    restart: always
+  #    ports:
+  #      - "5432:5432"
+  #    environment:
+  #      - POSTGRES_USER=admin
+  #      - POSTGRES_PASSWORD=root
+  #      - POSTGRES_DB=appsData
+  #
+  #  pgadmin:
+  #    image: dpage/pgadmin4
+  #    environment:
+  #      - PGADMIN_DEFAULT_EMAIL=user@domain.com
+  #      - PGADMIN_DEFAULT_PASSWORD=Password
+  #      - PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=True
+  #      - PGADMIN_CONFIG_LOGIN_BANNER="Authorised users only!"
+  #      - PGADMIN_CONFIG_CONSOLE_LOG_LEVEL=10
+  #    ports:
+  #      - "80:80"
+  #    depends_on:
+  #      - postgres
+  ##
 
-  postgres:
-    image: postgres
-    restart: always
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=appsData
-
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=user@domain.com
-      - PGADMIN_DEFAULT_PASSWORD=Password
-      - PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=True
-      - PGADMIN_CONFIG_LOGIN_BANNER="Authorised users only!"
-      - PGADMIN_CONFIG_CONSOLE_LOG_LEVEL=10
-    ports:
-      - "80:80"
-    depends_on:
-      - postgres

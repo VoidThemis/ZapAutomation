@@ -1,20 +1,14 @@
 package com.capge.pack;
 
-import browserFactory.BrowserFactory;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.openqa.selenium.Proxy;
-import org.openqa.selenium.WebDriver;
-import org.zaproxy.clientapi.core.ApiResponse;
-import org.zaproxy.clientapi.core.ClientApi;
-import org.zaproxy.clientapi.core.ClientApiException;
-import tools.Waiting;
+import csvHandler.AppEntry;
+import csvHandler.CSVReading;
+import tools.Logger;
+import zapConfiguration.SpiderScan;
+import zapConfiguration.ZapApiClient;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.DateFormat;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 /**
  * @author Dani "Bolombo" Bonilla
@@ -22,88 +16,82 @@ import java.text.DateFormat;
 
 public class ZapAuto {
 
-    private static final String ZAP_PROXYHOST = "localhost";
-    private static final int ZAP_PROXYPORT = 8090;
-    //private static final String URl = "https://www.arthemis.tech";
-    private static final String URl = "https://defendtheweb.net/";
-    public static final Logger Log = LogManager.getLogger(ZapAuto.class);
-    private static WebDriver driver;
 
-    ClientApi zapApp = new ClientApi(ZAP_PROXYHOST, ZAP_PROXYPORT);
+    /**
+     * TODO:
+     * 1. obtencion de datos del CSV ------------------ STATUS - DONE !!! :D
+     * 2. Verificacion de los datos del CSV ----------- STATUS - DONE !!! :D
+     * 3. Ejecucion del escaneo ------------------ STATUS - FAIL !!!!
+     * 4. Generacion del informe ----------------- STATUS - FAIL !!!!
+     */
 
-    protected Proxy apiZapSetup() {
+
+    private final ZapApiClient zapClient;
+    private final SpiderScan spiderScan;
+
+    public ZapAuto() {
+        this.zapClient = new ZapApiClient();
+        this.spiderScan = new SpiderScan(zapClient);
+    }
+
+    public static void main(String[] args) {
+        ZapAuto app = new ZapAuto();
+        app.start();
+    }
+
+    private void start() {
+        List<AppEntry> apps = loadAppsFromCsv("/home/apholo/red/logs/capgeminiApps/apps_ci_details.csv");
+        Logger.info(ZapAuto.class, "Apps loaded: " + apps.size());
+
+        Queue<AppEntry> queue = new LinkedList<>(apps);
+        Logger.info(ZapAuto.class, "Queue size: " + queue.size());
+
+        while (!queue.isEmpty()) {
+            AppEntry appEntry = queue.poll();
+            runScan(appEntry);
+        }
+
+        Logger.status(ZapAuto.class, "Execution Terminated -- Bye:D");
+    }
+
+    private void runScan(AppEntry app) {
+        Logger.startRequest();
+        Logger.startTimer();
 
         try {
-            Proxy seleniumProxy = new Proxy();
-            seleniumProxy.setProxyAutoconfigUrl("http://" + ZAP_PROXYHOST + ":" + ZAP_PROXYPORT);
-            zapApp.ascan.removeAllScans();
-            zapApp.core.newSession("","");
-            return seleniumProxy;
-        }catch (Exception e){
-            Log.info(e);
-            return null;
+            Logger.status(ZapAuto.class,"Start scanning app: " + app.getProjectID() + " - " + app.getProjectName());
+            spiderScan.startScanningApplication(app.getPreproductionUrl(),app.getProjectID(),app.getProjectName());
+
+        } catch (Exception e) {
+            Logger.error(ZapAuto.class, "Failed during scan", e);
+        } finally {
+            Logger.clearTimer();
+            Logger.clearRequest();
         }
     }
 
-    protected void spiderScan() throws ClientApiException {
-        System.out.println("-- Starting the SPIDER Scan --");
-        zapApp.spider.scan(URl,null, null,null,null);
-        System.out.println("-- The SPIDER Scan was Complete!! --");
-    }
+    private List<AppEntry> loadAppsFromCsv(String path) {
+        Logger.startRequest();
+        Logger.startTimer();
 
-
-    protected void scanningRealTime() throws Exception {
-        System.out.println("-- Waiting for passive scan to complete --");
         try {
-            zapApp.pscan.enableAllScanners(); // enable passive scanner.
-
-            ApiResponse response = zapApp.pscan.recordsToScan(); // getting a response
-
-            //iterating till we get response as "0".
-            while(!response.toString().equals("100")) {
-                response =	zapApp.pscan.recordsToScan();
-            }
-        } catch (ClientApiException e1) {
-            e1.printStackTrace();
+            Logger.status(ZapAuto.class, "Loading apps from CSV: " + path);
+            return CSVReading.readAndValidate(path, true).getValidEntries();
+        } catch (Exception e) {
+            Logger.error(ZapAuto.class, "Failed to load CSV", e);
+            return List.of();
+        } finally {
+            Logger.clearTimer();
+            Logger.clearRequest();
         }
-        System.out.println("--- Passive scan completed! ---");
-        System.out.println("-- Waiting for scan progress to complete --");
-        zapApp.ascan.scan(URl, "true","false",null,null, null);
-        zapApp.activeScanSiteInScope(URl);
-        System.out.println("--- Scan Progress completed! ---");
     }
 
-    protected void scanningURL() throws Exception {
-        BrowserFactory browserConfig = new BrowserFactory();
-        Waiting.time(5000);
-        driver = (WebDriver) browserConfig.BrowserSetupOptionsDriver(apiZapSetup(),true,true);
-        driver.get(URl);
-        spiderScan();
-        Waiting.time(5000);
-        scanningRealTime();
-        Waiting.time(5000);
-    }
-
-    protected void RemoveAndCleanTheSession() throws ClientApiException {
-        zapApp.ascan.removeAllScans();
-        zapApp.core.newSession("","");
-    }
-
-    protected void ZapReporting() throws ClientApiException, IOException {
-        String report = new String(zapApp.core.htmlreport());
-        Path fileReportPath = Paths.get(System.getProperty("user.dir") + "/scanZAPAuto/"+ DateFormat.getDateInstance() + URl + ".html");
-        Files.deleteIfExists(fileReportPath);
-        Files.write(fileReportPath, report.getBytes());
-        RemoveAndCleanTheSession();
-    }
-
-    protected void runningZap() throws Exception {
-        scanningURL();
-        ZapReporting();
-        driver.quit();
-    }
     public void runZap() throws Exception {
-        runningZap();
+        //runningZap();
     }
+
+    public static final String ZAP_PROXYHOST = "localhost";
+    public static final int ZAP_PROXYPORT = 8090;
+
 
 }

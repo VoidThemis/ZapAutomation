@@ -14,6 +14,8 @@ import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.safari.SafariOptions;
 import tools.RandomNumersInRange;
 
+import java.util.Objects;
+
 /**
  * @author Dani "Bolombo" Bonilla
  */
@@ -24,7 +26,7 @@ public class BrowserFactory {
 
 
     public Object BrowserSetupOptionsDriver(Proxy expectedProxy, Boolean acceptSSLCerts, Boolean acceptInsecCerts){
-        driver = (WebDriver) browserSetup(selectRandomBrowser(),expectedProxy,acceptSSLCerts,acceptInsecCerts);
+        driver = (WebDriver) browserSetup(Objects.requireNonNull(selectRandomBrowser()),expectedProxy,acceptSSLCerts,acceptInsecCerts);
         return driver;
     }
 
@@ -44,16 +46,6 @@ public class BrowserFactory {
                 System.out.println(firefox);
                 return firefox;
             }
-            /*case 3 -> {
-                String egde = "Edge";
-                System.out.println(egde);
-                return egde;
-            }
-            case 4 -> {
-                String safari = "Safari";
-                System.out.println(safari);
-                return safari;
-            }*/
         }
        return null;
    }
@@ -67,15 +59,7 @@ public class BrowserFactory {
             case "Firefox" -> {
                 driver = new FirefoxDriver(firefoxOptionsSetup(expectedProxy, acceptSSLCerts, acceptInsecCerts));
                 return driver;
-            }/*
-            case "Edge" -> {
-                driver = new EdgeDriver(edgeOptionsSetup(expectedProxy, acceptSSLCerts, acceptInsecCerts));
-                return driver;
             }
-            case "Safari" -> {
-                driver = new SafariDriver(safariOptionsSetup(expectedProxy, acceptSSLCerts, acceptInsecCerts));
-                return driver;
-            }*/
         }
            return null;
        }
@@ -98,20 +82,4 @@ public class BrowserFactory {
        fireOpts.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, acceptInsecCerts);
        return fireOpts;
    }
-    private EdgeOptions edgeOptionsSetup(Proxy expectedProxy, Boolean acceptSSLCerts, Boolean acceptInsecCerts){
-       WebDriverManager.edgedriver().setup();
-       EdgeOptions edgeOpts = new EdgeOptions();
-       edgeOpts.setCapability(CapabilityType.PROXY, expectedProxy);
-       edgeOpts.setCapability(CapabilityType.ACCEPT_SSL_CERTS, acceptSSLCerts);
-       edgeOpts.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, acceptInsecCerts);
-       return edgeOpts;
-   }
-    private SafariOptions safariOptionsSetup(Proxy expectedProxy, Boolean acceptSSLCerts, Boolean acceptInsecCerts){
-        WebDriverManager.safaridriver().setup();
-        SafariOptions safaOpts = new SafariOptions();
-        safaOpts.setCapability(CapabilityType.PROXY, expectedProxy);
-        safaOpts.setCapability(CapabilityType.ACCEPT_SSL_CERTS, acceptSSLCerts);
-        safaOpts.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, acceptInsecCerts);
-        return safaOpts;
-    }
 }
