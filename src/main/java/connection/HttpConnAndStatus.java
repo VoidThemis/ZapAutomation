@@ -1,5 +1,5 @@
 package connection;
-
+/**
 import org.apache.commons.httpclient.*;
 import org.apache.hc.core5.http.HttpResponse;
 
@@ -15,3 +15,5 @@ public class HttpConnAndStatus {
 
 
 }
+ **/
+
