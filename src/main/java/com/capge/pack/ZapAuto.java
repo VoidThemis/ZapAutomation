@@ -3,6 +3,7 @@ package com.capge.pack;
 import csvHandler.AppEntry;
 import csvHandler.CSVReading;
 import tools.Logger;
+import zapConfiguration.ScanReportService;
 import zapConfiguration.SpiderScan;
 import zapConfiguration.ZapApiClient;
 
@@ -28,10 +29,12 @@ public class ZapAuto {
 
     private final ZapApiClient zapClient;
     private final SpiderScan spiderScan;
+    private final ScanReportService scanReport;
 
     public ZapAuto() {
         this.zapClient = new ZapApiClient();
         this.spiderScan = new SpiderScan(zapClient);
+        this.scanReport = new ScanReportService();
     }
 
     public static void main(String[] args) {
@@ -60,7 +63,7 @@ public class ZapAuto {
 
         try {
             Logger.status(ZapAuto.class,"Start scanning app: " + app.getProjectID() + " - " + app.getProjectName());
-            spiderScan.startScanningApplication(app.getPreproductionUrl(),app.getProjectID(),app.getProjectName());
+            scanReport.startScanningApplication(app.getPreproductionUrl(),app.getProjectID(),app.getProjectName());
 
         } catch (Exception e) {
             Logger.error(ZapAuto.class, "Failed during scan", e);

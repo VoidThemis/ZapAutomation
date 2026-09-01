@@ -4,8 +4,10 @@ import org.zaproxy.clientapi.core.ApiResponse;
 import org.zaproxy.clientapi.core.ClientApi;
 import org.zaproxy.clientapi.core.ClientApiException;
 import tools.Logger;
+import tools.Waiting;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,8 +28,9 @@ public class SpiderScan {
         Logger.startTimer();
         try {
             Logger.status(SpiderScan.class, "-- Starting the SPIDER Scan --");
-            zapApi.spider.scan(url,null, null,null,null);
+            zapApi.spider.scan(url,null, "true",null,"true");
             Logger.status(SpiderScan.class, "-- The SPIDER Scan was Complete!! --");
+            Waiting.time(5000);
             Logger.status(SpiderScan.class,
                     "Execution time: " + Logger.executionTime() + " ms");
         } catch (Exception e) {
@@ -64,7 +67,7 @@ public class SpiderScan {
         Logger.startRequest();
         Logger.startTimer();
         try {
-            zapApi.ascan.scan(url,"true","false", null, null, null);
+            zapApi.ascan.scan(url,"true","true", null, null, null);
             zapApi.activeScanSiteInScope(url);
             System.out.println("--- Scan Progress completed! ---");
         } catch (Exception e) {
@@ -97,8 +100,10 @@ public class SpiderScan {
         String reportName = id + "-"+ appName;
         try {
             Logger.info(ScanReportService.class, "-- Generating the scanning report");
-            String report = new String(zapApi.core.htmlreport());
-            Path fileReportPath = Paths.get(System.getProperty("user.dir") + "/scanZAPAuto/"+ DateFormat.getDateInstance() + reportName + ".html");
+            String report = new String(zapApi.core.htmlreport(), StandardCharsets.UTF_8);
+            report = report.replace("ZAP Scanning Report", "ZAP Scanning Report - " + reportName);
+            Path fileReportPath = Paths.get(System.getProperty("user.dir") + "/zapReports/" + reportName + ".html");
+            Files.writeString(fileReportPath, report);
             Files.deleteIfExists(fileReportPath);
             Files.write(fileReportPath, report.getBytes());
             removeAndCleanTheSession();

@@ -1,37 +1,51 @@
-version: '3.3'
+
+version: "3.8"
+
 services:
-  owasp-zap:
-    image: owasp/zap2docker-stable
-    restart: always
-    ports:
-      - "8090:8090"
-    command: zap.sh -daemon -host 0.0.0.0 -port 8090 -config api.disablekey=true -config database.recoverylog=false -config connection.timeoutInSecs=120 -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true
-    #logging:
-    #  driver: "none"
+  owasp-zap-0:
+    image: zaproxy/zap-stable
+    container_name: zap-stable-0
+    restart: unless-stopped
+    network_mode: "host"
+    command: >
+      zap.sh -daemon
+      -host 0.0.0.0
+      -port 8090
+      -config api.disablekey=true
+      -config api.addrs.addr.name=.*
+      -config api.addrs.addr.regex=true
+      -config connection.timeoutInSecs=300
+    volumes:
+      - ./volumes/zap0:/zap/results
 
+  owasp-zap-1:
+    image: zaproxy/zap-stable
+    container_name: zap-stable-1
+    restart: unless-stopped
+    network_mode: "host"
+    command: >
+      zap.sh -daemon
+      -host 0.0.0.0
+      -port 8091
+      -config api.disablekey=true
+      -config api.addrs.addr.name=.*
+      -config api.addrs.addr.regex=true
+      -config connection.timeoutInSecs=300
+    volumes:
+      - ./volumes/zap1:/zap/results
 
-# TODO = revisar una manera de pasar los valores clave como 'SECRETS' [secrets-docker]
-##  postgres:
-  #    image: postgres
-  #    restart: always
-  #    ports:
-  #      - "5432:5432"
-  #    environment:
-  #      - POSTGRES_USER=admin
-  #      - POSTGRES_PASSWORD=root
-  #      - POSTGRES_DB=appsData
-  #
-  #  pgadmin:
-  #    image: dpage/pgadmin4
-  #    environment:
-  #      - PGADMIN_DEFAULT_EMAIL=user@domain.com
-  #      - PGADMIN_DEFAULT_PASSWORD=Password
-  #      - PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=True
-  #      - PGADMIN_CONFIG_LOGIN_BANNER="Authorised users only!"
-  #      - PGADMIN_CONFIG_CONSOLE_LOG_LEVEL=10
-  #    ports:
-  #      - "80:80"
-  #    depends_on:
-  #      - postgres
-  ##
-
+  owasp-zap-2:
+    image: zaproxy/zap-stable
+    container_name: zap-stable-2
+    restart: unless-stopped
+    network_mode: "host"
+    command: >
+      zap.sh -daemon
+      -host 0.0.0.0
+      -port 8092
+      -config api.disablekey=true
+      -config api.addrs.addr.name=.*
+      -config api.addrs.addr.regex=true
+      -config connection.timeoutInSecs=300
+    volumes:
+      - ./volumes/zap2:/zap/results
